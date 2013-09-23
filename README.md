@@ -1,4 +1,6 @@
-imageutils
-==========
+imageustils
+===========
 
-Utilities for working with images in haskell.
+utilities for working with images in haskell
+
+More features and modules to come.
