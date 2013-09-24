@@ -1,11 +1,11 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  ImageUtils
--- Copyright   :  Joe Jevnik 2013
+-- Copyright   :  Joe Jevnik 23.9.2013
 -- License     :  GPL v2
 -- 
 -- Maintainer  :  Joe Jevnik
--- Stability   :  stable
+-- Stability   :  experimental
 -- Portability :  requires devIL
 --
 -- Operations on image files.
@@ -47,10 +47,7 @@ data Color = Red | Green | Blue | Alpha
 main :: IO ()
 main = do
     ilInit
-    img <- readImage "../ducks.jpg"
-    -- writeImage "../ducks_flipped.jpg" (flip_vert img)
-    writeImage "../test4.jpg" $ invert_color Red $ invert_color Blue $ invert_color Green img
-    -- writeImage "../noblue.jpg" (strip_blue img)
+    
 
 
 -- -----------------------------------------------------------------------------
