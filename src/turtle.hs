@@ -134,7 +134,7 @@ new t xstr ystr = case ( readMaybe xstr :: Maybe Int
                                          $ Turtle { loc   = (0,0)
                                                   , color = bLACK
                                                   , image = listArray ((0,0,0)
-                                                                      ,(499,499,3)) 
+                                                                      ,(x,y,3)) 
                                                             (repeat 255)
                                                   , comln = comln t + 1
                                                   }
