@@ -12,8 +12,9 @@
 --
 -----------------------------------------------------------------------------
 
+import Text.Read (readMaybe)
 import Control.Applicative ((<$>))
-import System.Exit (exitSuccess)
+import System.Exit (exitSuccess,exitFailure)
 import ImageUtils
 
 -- |Data type for the turtle's state.
@@ -39,14 +40,16 @@ main = ilInit >> recurs nEW_TURTLE >> return ()
 -- |The main loop that extracts the commands and parses them into actions.
 recurs :: IO Turtle -> IO Turtle
 recurs iot = do
-    t <- iot
-    cs <- words <$> getLine
-    recurs $ parse_ln cs t
+    t  <- iot
+    recurs $ (words <$> getLine) >>= parse_ln t
 
 -- |Parse a line of user input or file input.
-parse_ln :: [String] -> Turtle -> IO Turtle
-parse_ln cs t
-    | null cs           = return $ t { comln = comln t + 1 } -- Empty lines.
+parse_ln :: Turtle -> [String] -> IO Turtle
+parse_ln t cs
+    | null cs            = return $ t { comln = comln t + 1 } -- Empty lines.
+    | head cs == "move" 
+      && null (tail cs)  =  error ("Parse error on line " ++ show (comln t) 
+                         ++ ": direction needed: up down left right")
     | head cs == "move"  = (move t (cs!!1) (read $ cs!!2))
                            >>= (\t' -> return $ t' { comln = comln t + 1 })
     | head cs == "color" = color_change t (cs!!1)
@@ -61,52 +64,35 @@ parse_ln cs t
                                     }
     | head cs == "--"   = return $ t { comln = comln t + 1 } -- Comments.
     | otherwise = error ("Parse error on line " ++ show (comln t) 
-                         ++ ": exiting!")
-                  >> exitSuccess >> nEW_TURTLE
+                         ++ ": command not recognized: '" ++ head cs ++ "'")
+                  >> exitFailure >> nEW_TURTLE
 
 -- |Moves the turtle leaving a trail behind it.
 move :: Turtle -> String -> Int -> IO Turtle
 move t dir n
-    | dir == "up"    = return 
-                       $ t { loc   = let (x,y) = loc t in (x,y+n)
-                           , image = move_up t n
-                           }
-    | dir == "down"  = return 
-                       $ t { loc   = let (x,y) = loc t in (x,y-n)
-                           , image = move_down t n
-                           }
-    | dir == "left"  = return 
-                       $ t { loc   = let (x,y) = loc t in (x-n,y)
-                           , image = move_left t n
-                           }
-    | dir == "right" = return 
-                       $ t { loc   = let (x,y) = loc t in (x+n,y)
-                           , image = move_right t n
-                           }
-
--- |Draws the move up data to the image.
-move_up :: Turtle -> Int -> Image
-move_up t n = let (x,y) = loc t
-                  img  = image t
-              in draw_seg (x,y) (x,y+n) (color t) img   
-
--- |Draws the move down data to the image.
-move_down :: Turtle -> Int -> Image
-move_down t n = let (x,y) = loc t
-                    img  = image t
-                in draw_seg (x,y) (x,y-n) (color t) img  
-
--- |Draws the move left data to the image.
-move_left :: Turtle -> Int -> Image
-move_left t n = let (x,y) = loc t
-                    img  = image t
-                in draw_seg (x,y) (x-n,y) (color t) img  
-
--- |Draws the move right data to the image.
-move_right :: Turtle -> Int -> Image
-move_right t n = let (x,y) = loc t
-                     img  = image t
-                 in draw_seg (x,y) (x+n,y) (color t) img  
+    | dir == "up"    = let (x,y) = loc t
+                       in return $ t { loc   = (x,y+n)
+                                     , image = draw_seg (x,y) (x,y+n) (color t)
+                                               (image t)
+                                     }
+    | dir == "down"  = let (x,y) = loc t
+                       in return $ t { loc   = (x,y-n)
+                                     , image = draw_seg (x,y) (x,y-n) (color t)
+                                               (image t)
+                                     }
+    | dir == "left"  = let (x,y) = loc t
+                       in return  $ t { loc   = (x-n,y)
+                                      , image = draw_seg (x,y) (x-n,y) (color t)
+                                                (image t)
+                                      }
+    | dir == "right" = let (x,y) = loc t
+                       in return  $ t { loc   = (x+n,y)
+                                      , image = draw_seg (x,y) (x+n,y) (color t)
+                                                (image t)
+                                      }
+    | otherwise      = error ("Parse error on line " ++ show (comln t) 
+                              ++ ": invalid direction: '" ++ dir ++ "'")
+                       >> exitFailure >> nEW_TURTLE
 
 -- |Changes the color channel of the tail of the turtle.
 color_change :: Turtle -> String -> IO Turtle
@@ -115,7 +101,14 @@ color_change t "green" = return t { color = gREEN    }
 color_change t "blue"  = return t { color = bLUE     }
 color_change t "black" = return t { color = bLACK    }
 color_change t "white" = return t { color = wHITE    }
-color_change t str     = return t { color = read str }
+color_change t str     = let b = readMaybe str :: Maybe (Word8,Word8,Word8)
+                         in case b of 
+                                Nothing -> error ("Parse error on line " 
+                                                  ++ show (comln t) 
+                                                  ++ ": invalid color: '" ++ str 
+                                                  ++ "': use '(r,g,b)'")
+                                           >> exitFailure >> nEW_TURTLE
+                                Just c -> return t { color = c }
 
 -- |Write's the turtles image to a file named fl.
 write :: Turtle -> FilePath -> IO Turtle
