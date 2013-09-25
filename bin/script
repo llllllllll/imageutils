@@ -2,7 +2,7 @@
 -- 24.9.2013
 -- An example turtle script that complete.
 
-start 0 0
+new 500 500
 move right 250
 move up 100
 move left 100

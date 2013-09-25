@@ -2,7 +2,7 @@
 -- 24.9.2013
 -- An example turtle script that will syntax error on line 14.
 
-start 0 0
+new 300 300
 move right 250
 move up 100
 move left 100
@@ -11,8 +11,7 @@ move down 30
 move right 200
 color green
 
-color 123123
-
+new cs
 -- comments are allowed after a command or to comment out an entire line only
 
 move up 300

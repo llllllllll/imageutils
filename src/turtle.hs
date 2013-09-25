@@ -33,7 +33,7 @@ nEW_TURTLE = return
                       , comln = 1
                       }
 
--- |Initializes devIL and starts with a new turtle.
+-- |Initializes devIL and starts recursing with a new turtle.
 main :: IO ()
 main = ilInit >> recurs nEW_TURTLE >> return ()
 
@@ -48,22 +48,20 @@ parse_ln :: Turtle -> [String] -> IO Turtle
 parse_ln t cs
     | null cs            = return $ t { comln = comln t + 1 } -- Empty lines.
     | head cs == "move" 
-      && null (tail cs)  =  error ("Parse error on line " ++ show (comln t) 
+      && null (tail cs)  =  error ("Parse error on line: " ++ show (comln t) 
                                    ++ ": direction needed: up down left right")
     | head cs == "move"  = (move t (cs!!1) (read $ cs!!2))
                            >>= (\t' -> return $ t' { comln = comln t + 1 })
     | head cs == "color" = color_change t (cs!!1)
                            >>= (\t' -> return $ t' { comln = comln t + 1 })
     | head cs == "write" = write t (cs!!1)
-    | head cs == "start" = return 
-                           $ Turtle { loc   = (read (cs!!2),read (cs!!1))
-                                    , color = bLACK
-                                    , image = listArray ((0,0,0),(499,499,3)) 
-                                              (repeat 255)
-                                    , comln = comln t + 1
-                                    }
-    | head cs == "--"   = return $ t { comln = comln t + 1 } -- Comments.
-    | otherwise = error ("Parse error on line " ++ show (comln t) 
+    | head cs == "new" && (null (tail cs) || null (tail (tail cs)))
+                         = error ("Parse error on line: " ++ show (comln t)
+                                  ++ ": missing paramaters to new: x y")
+                           >> exitFailure >> nEW_TURTLE
+    | head cs == "new"   = new t (cs!!1) (cs!!2)
+    | head cs == "--"    = return $ t { comln = comln t + 1 } -- Comments.
+    | otherwise = error ("Parse error on line: " ++ show (comln t) 
                          ++ ": command not recognized: '" ++ head cs ++ "'")
                   >> exitFailure >> nEW_TURTLE
 
@@ -101,14 +99,45 @@ color_change t "green" = return t { color = gREEN    }
 color_change t "blue"  = return t { color = bLUE     }
 color_change t "black" = return t { color = bLACK    }
 color_change t "white" = return t { color = wHITE    }
-color_change t str     = let b = readMaybe str :: Maybe (Word8,Word8,Word8)
-                         in case b of 
-                                Nothing -> error ("Parse error on line " 
-                                                  ++ show (comln t) 
-                                                  ++ ": invalid color: '" ++ str 
-                                                  ++ "': use '(r,g,b)'")
-                                           >> exitFailure >> nEW_TURTLE
-                                Just c -> return t { color = c }
+color_change t str     = case readMaybe str :: Maybe (Word8,Word8,Word8) of 
+                             Nothing -> error ("Parse error on line " 
+                                               ++ show (comln t) 
+                                               ++ ": invalid color: '" ++ str 
+                                               ++ "': use '(r,g,b)'")
+                                        >> exitFailure >> nEW_TURTLE
+                             Just c -> return t { color = c }
+
+
+-- |News a new turtle on white image of size x y.
+new :: Turtle -> String -> String -> IO Turtle
+new t xstr ystr = case ( readMaybe xstr :: Maybe Int
+                         , readMaybe ystr :: Maybe Int
+                         )
+                    of
+                    (Nothing,Nothing) -> error ("Parse error on line "
+                                                ++ show (comln t)
+                                                ++ ": bad new size "
+                                                ++ "arguments: '" ++ xstr 
+                                                ++ "' '" ++ ystr ++ "'")
+                                         >> exitFailure >> nEW_TURTLE
+                    (Nothing,_)       -> error ("Parse error on line "
+                                                ++ show (comln t)
+                                                ++ ": bad new x size "
+                                                ++ "argument: '" ++ xstr ++ "'")
+                                         >> exitFailure >> nEW_TURTLE
+                    (_,Nothing)       -> error ("Parse error on line "
+                                                ++ show (comln t)
+                                                ++ ": bad new y argument: '"
+                                                ++ ystr ++ "'")
+                                         >> exitFailure >> nEW_TURTLE
+                    (Just x,Just y)   -> return 
+                                         $ Turtle { loc   = (0,0)
+                                                  , color = bLACK
+                                                  , image = listArray ((0,0,0)
+                                                                      ,(499,499,3)) 
+                                                            (repeat 255)
+                                                  , comln = comln t + 1
+                                                  }
 
 -- |Write's the turtles image to a file named fl.
 write :: Turtle -> FilePath -> IO Turtle
