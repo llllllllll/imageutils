@@ -1,0 +1,16 @@
+-- Joe Jevnik
+-- 24.9.2013
+-- An example turtle script that complete.
+
+start 0 0
+move right 250
+move up 100
+move left 100
+color blue
+move down 30
+move right 200
+color green
+move up 300
+color (0,255,255) -- Example comment.
+move left 100
+write script_test.png
