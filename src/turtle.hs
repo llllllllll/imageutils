@@ -49,7 +49,7 @@ parse_ln t cs
     | null cs            = return $ t { comln = comln t + 1 } -- Empty lines.
     | head cs == "move" 
       && null (tail cs)  =  error ("Parse error on line " ++ show (comln t) 
-                         ++ ": direction needed: up down left right")
+                                   ++ ": direction needed: up down left right")
     | head cs == "move"  = (move t (cs!!1) (read $ cs!!2))
                            >>= (\t' -> return $ t' { comln = comln t + 1 })
     | head cs == "color" = color_change t (cs!!1)
