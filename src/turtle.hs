@@ -20,7 +20,7 @@ import ImageUtils
 -- |Data type for the turtle's state.
 data Turtle = Turtle { loc   :: (Int,Int) -- Turtles location on the image.
                      , color :: Color     -- The color of the tail.
-                     , comln :: Int       -- The amount of commands (errors).
+                     , comln :: Int       -- The amount of commands (erroring).
                      , image :: Image     -- The image (default is 500,500).
                      }
 
@@ -111,9 +111,9 @@ color_change t str     = case readMaybe str :: Maybe (Word8,Word8,Word8) of
 -- |News a new turtle on white image of size x y.
 new :: Turtle -> String -> String -> IO Turtle
 new t xstr ystr = case ( readMaybe xstr :: Maybe Int
-                         , readMaybe ystr :: Maybe Int
-                         )
-                    of
+                       , readMaybe ystr :: Maybe Int
+                       ) 
+                  of
                     (Nothing,Nothing) -> error ("Parse error on line "
                                                 ++ show (comln t)
                                                 ++ ": bad new size "
@@ -121,7 +121,7 @@ new t xstr ystr = case ( readMaybe xstr :: Maybe Int
                                                 ++ "' '" ++ ystr ++ "'")
                                          >> exitFailure >> nEW_TURTLE
                     (Nothing,_)       -> error ("Parse error on line "
-                                                ++ show (comln t)
+                                              ++ show (comln t)
                                                 ++ ": bad new x size "
                                                 ++ "argument: '" ++ xstr ++ "'")
                                          >> exitFailure >> nEW_TURTLE
@@ -134,11 +134,40 @@ new t xstr ystr = case ( readMaybe xstr :: Maybe Int
                                          $ Turtle { loc   = (0,0)
                                                   , color = bLACK
                                                   , image = listArray ((0,0,0)
-                                                                      ,(x,y,3)) 
+                                                                      ,(y,x,3)) 
                                                             (repeat 255)
                                                   , comln = comln t + 1
                                                   }
 
 -- |Write's the turtles image to a file named fl.
 write :: Turtle -> FilePath -> IO Turtle
-write t fl = writeImage fl (image t) >> exitSuccess >> nEW_TURTLE
+write t fl
+    | dropWhile (/='.') fl `elem` [ ".bmp" 
+                                  , ".dds" 
+                                  ,".exr"
+                                  , ".h"
+                                  , ".jpg"
+                                  , ".jp2"
+                                  , ".pal"
+                                  , ".pcx"
+                                  , ".png"
+                                  , ".pbm"
+                                  , ".pgm"
+                                  , ".pgm"
+                                  , ".pnm"
+                                  , ".psd"
+                                  , ".raw"
+                                  , ".sgi"
+                                  , ".bw"
+                                  , ".rgb"
+                                  , ".rgba"
+                                  , ".tga"
+                                  , ".tif"
+                                  , ".vtf"
+                                  ] 
+                = writeImage fl (image t)
+                  >> exitSuccess >> nEW_TURTLE
+    | otherwise = error ("Parse error on line: " ++ show (comln t)
+                         ++ ": invalid file format: '" ++ dropWhile (/='.') fl 
+                         ++ "'")
+                  >> exitFailure >> nEW_TURTLE

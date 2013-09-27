@@ -11,7 +11,7 @@ move down 30
 move right 200
 color green
 
-new cs
+new
 -- comments are allowed after a command or to comment out an entire line only
 
 move up 300
