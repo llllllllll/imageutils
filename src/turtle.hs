@@ -1,9 +1,9 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  TurtleGraphics
--- Copyright   :  Joe Jevnik 23.9.2013
+-- Copyright   :  Joe Jevnik 27.9.2013
 -- License     :  GPL v2
--- 
+--
 -- Maintainer  :  Joe Jevnik
 -- Stability   :  experimental
 -- Portability :  requires ImageUtils and devIL.
@@ -26,7 +26,7 @@ data Turtle = Turtle { loc   :: (Int,Int) -- Turtles location on the image.
 
 -- |The default turtle state.
 nEW_TURTLE :: IO Turtle
-nEW_TURTLE = return 
+nEW_TURTLE = return
              $ Turtle { loc   = (0,0)
                       , color = bLACK
                       , image = listArray ((0,0,0),(499,499,3)) (repeat 255)
@@ -47,8 +47,8 @@ recurs iot = do
 parse_ln :: Turtle -> [String] -> IO Turtle
 parse_ln t cs
     | null cs            = return $ t { comln = comln t + 1 } -- Empty lines.
-    | head cs == "move" 
-      && null (tail cs)  =  error ("Parse error on line: " ++ show (comln t) 
+    | head cs == "move"
+      && null (tail cs)  =  error ("Parse error on line: " ++ show (comln t)
                                    ++ ": direction needed: up down left right")
     | head cs == "move"  = (move t (cs!!1) (read $ cs!!2))
                            >>= (\t' -> return $ t' { comln = comln t + 1 })
@@ -61,7 +61,7 @@ parse_ln t cs
                            >> exitFailure >> nEW_TURTLE
     | head cs == "new"   = new t (cs!!1) (cs!!2)
     | head cs == "--"    = return $ t { comln = comln t + 1 } -- Comments.
-    | otherwise = error ("Parse error on line: " ++ show (comln t) 
+    | otherwise = error ("Parse error on line: " ++ show (comln t)
                          ++ ": command not recognized: '" ++ head cs ++ "'")
                   >> exitFailure >> nEW_TURTLE
 
@@ -88,7 +88,7 @@ move t dir n
                                       , image = draw_seg (x,y) (x+n,y) (color t)
                                                 (image t)
                                       }
-    | otherwise      = error ("Parse error on line " ++ show (comln t) 
+    | otherwise      = error ("Parse error on line " ++ show (comln t)
                               ++ ": invalid direction: '" ++ dir ++ "'")
                        >> exitFailure >> nEW_TURTLE
 
@@ -99,25 +99,24 @@ color_change t "green" = return t { color = gREEN    }
 color_change t "blue"  = return t { color = bLUE     }
 color_change t "black" = return t { color = bLACK    }
 color_change t "white" = return t { color = wHITE    }
-color_change t str     = case readMaybe str :: Maybe (Word8,Word8,Word8) of 
-                             Nothing -> error ("Parse error on line " 
-                                               ++ show (comln t) 
-                                               ++ ": invalid color: '" ++ str 
+color_change t str     = case readMaybe str :: Maybe (Word8,Word8,Word8) of
+                             Nothing -> error ("Parse error on line "
+                                               ++ show (comln t)
+                                               ++ ": invalid color: '" ++ str
                                                ++ "': use '(r,g,b)'")
                                         >> exitFailure >> nEW_TURTLE
                              Just c -> return t { color = c }
-
 
 -- |News a new turtle on white image of size x y.
 new :: Turtle -> String -> String -> IO Turtle
 new t xstr ystr = case ( readMaybe xstr :: Maybe Int
                        , readMaybe ystr :: Maybe Int
-                       ) 
+                       )
                   of
                     (Nothing,Nothing) -> error ("Parse error on line "
                                                 ++ show (comln t)
                                                 ++ ": bad new size "
-                                                ++ "arguments: '" ++ xstr 
+                                                ++ "arguments: '" ++ xstr
                                                 ++ "' '" ++ ystr ++ "'")
                                          >> exitFailure >> nEW_TURTLE
                     (Nothing,_)       -> error ("Parse error on line "
@@ -130,11 +129,11 @@ new t xstr ystr = case ( readMaybe xstr :: Maybe Int
                                                 ++ ": bad new y argument: '"
                                                 ++ ystr ++ "'")
                                          >> exitFailure >> nEW_TURTLE
-                    (Just x,Just y)   -> return 
+                    (Just x,Just y)   -> return
                                          $ Turtle { loc   = (0,0)
                                                   , color = bLACK
                                                   , image = listArray ((0,0,0)
-                                                                      ,(y,x,3)) 
+                                                                      ,(y,x,3))
                                                             (repeat 255)
                                                   , comln = comln t + 1
                                                   }
@@ -142,9 +141,9 @@ new t xstr ystr = case ( readMaybe xstr :: Maybe Int
 -- |Write's the turtles image to a file named fl.
 write :: Turtle -> FilePath -> IO Turtle
 write t fl
-    | dropWhile (/='.') fl `elem` [ ".bmp" 
-                                  , ".dds" 
-                                  ,".exr"
+    | dropWhile (/='.') fl `elem` [ ".bmp"
+                                  , ".dds"
+                                  , ".exr"
                                   , ".h"
                                   , ".jpg"
                                   , ".jp2"
@@ -164,10 +163,10 @@ write t fl
                                   , ".tga"
                                   , ".tif"
                                   , ".vtf"
-                                  ] 
+                                  ]
                 = writeImage fl (image t)
                   >> exitSuccess >> nEW_TURTLE
     | otherwise = error ("Parse error on line: " ++ show (comln t)
-                         ++ ": invalid file format: '" ++ dropWhile (/='.') fl 
+                         ++ ": invalid file format: '" ++ dropWhile (/='.') fl
                          ++ "'")
                   >> exitFailure >> nEW_TURTLE
