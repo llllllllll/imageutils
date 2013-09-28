@@ -19,42 +19,43 @@ module ImageUtils
     , Color
     , Image
     -- * Properties
-    , width           -- :: Image -> Int
-    , height          -- :: Image -> Height
+    , width            -- :: Image -> Int
+    , height           -- :: Image -> Height
+    , d_indices        -- :: Image -> [(Int,Int)]
     -- * Colors
-    , rED
-    , gREEN
-    , bLUE
-    , cYAN
-    , bLACK
-    , wHITE
+    , rED              -- :: Color
+    , gREEN            -- :: Color
+    , bLUE             -- :: Color
+    , cYAN             -- :: Color
+    , bLACK            -- :: Color
+    , wHITE            -- :: Color
     -- * Primary color changes
-    , strip           -- :: PrimaryColor -> Image -> Image
-    , (<//>)          -- :: Image -> PrimaryColor -> Image
-    , filter_img      -- :: PrimaryColor -> Image -> Image
+    , strip            -- :: PrimaryColor -> Image -> Image
+    , (<//>)           -- :: Image -> PrimaryColor -> Image
+    , filter_img       -- :: PrimaryColor -> Image -> Image
     , (<##>)           -- :: Image -> PrimaryColor -> Image
-    , edit_brightness -- :: Double -> Image
-    , edit_primary    -- :: PrimaryColor -> Double -> Image
-    , invert_primarys -- :: Image -> Image
-    , invert_primary  -- :: PrimaryColor -> Image
+    , edit_brightness  -- :: Double -> Image
+    , edit_primary     -- :: PrimaryColor -> Double -> Image
+    , invert_primaries -- :: Image -> Image
+    , invert_primary   -- :: PrimaryColor -> Image
     -- * Color tools
-    , black_and_white -- :: Double -> Image -> Image
-    , gs_light        -- :: Image -> Image
-    , gs_avg          -- :: Image -> Image
-    , gs_lum          -- :: Image -> Image
+    , black_and_white  -- :: Double -> Image -> Image
+    , gs_light         -- :: Image -> Image
+    , gs_avg           -- :: Image -> Image
+    , gs_lum           -- :: Image -> Image
     -- * Orientation
-    , flip_vert       -- :: Image -> Image
-    , flip_horz       -- :: Image -> Image
+    , flip_vert        -- :: Image -> Image
+    , flip_horz        -- :: Image -> Image
     -- * Drawing
-    , draw_seg        -- :: (Int,Int) -> (Int,Int) -> Color -> Image -> Image
-    , draw_ln         -- :: (Int,Int) -> (Int,Int) -> Color -> Image -> Image
+    , draw_seg         -- :: (Int,Int) -> (Int,Int) -> Color -> Image -> Image
+    , draw_ln          -- :: (Int,Int) -> (Int,Int) -> Color -> Image -> Image
     -- * Composing
-    , merge           -- :: Image -> Image -> Image
-    , (>++<)          -- :: Image -> Image -> Image
-    , tile_horz       -- :: Image -> Image -> Image
-    , (>++>)          -- :: Image -> Image -> Image
-    , tile_vert       -- :: Image -> Image -> Image
-    , (^++^)          -- :: Image -> Image -> Image
+    , merge            -- :: Image -> Image -> Image
+    , (>++<)           -- :: Image -> Image -> Image
+    , tile_horz        -- :: Image -> Image -> Image
+    , (>++>)           -- :: Image -> Image -> Image
+    , tile_vert        -- :: Image -> Image -> Image
+    , (^++^)           -- :: Image -> Image -> Image
     ) where
 
 import Codec.Image.DevIL
@@ -198,14 +199,14 @@ edit_primary Blue  n img = img//[(i,floor (n * fromIntegral (img!i)))
 
 -- |Inverts the colors of the Image.
 --
--- @ invert_primarys == invert_primary Red $ invert_primary Green
+-- @ invert_primaries == invert_primary Red $ invert_primary Green
 --                  $ invert_primary Blue img @
-invert_primarys :: Image -> Image
-invert_primarys img = amap (255-) img
+invert_primaries :: Image -> Image
+invert_primaries img = amap (255-) img
 
 -- |Inverts the values of the color in the image.
 --
--- @ invert_primarys == invert_primary Red $ invert_primary Green
+-- @ invert_primaries == invert_primary Red $ invert_primary Green
 --                  $ invert_primary Blue img @
 invert_primary :: PrimaryColor -> Image -> Image
 invert_primary Red   img = img//[(i,255 - img!i) | (r,c) <- d_indices img
