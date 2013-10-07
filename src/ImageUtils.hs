@@ -43,6 +43,8 @@ module ImageUtils
     , gs_light         -- :: Image -> Image
     , gs_avg           -- :: Image -> Image
     , gs_lum           -- :: Image -> Image
+    , to_ascii         -- :: Image -> String
+    , to_ascii_scaled  -- :: Int -> Image -> String
     -- * Orientation
     , flip_vert        -- :: Image -> Image
     , flip_horz        -- :: Image -> Image
@@ -101,7 +103,13 @@ pop_art = do
 test_ascii = do
     ilInit
     img <- readImage "../img/duck.jpg"
-    appendFile "../test.txt" $ to_ascii_scaled 10 img
+    appendFile "../test.txt" $ to_ascii img
+
+test_ascii_sc = do
+    ilInit
+    img <- readImage "../img/duck.jpg"
+    appendFile "../test.txt" $ to_ascii_scaled 5 img
+
 
 -- -----------------------------------------------------------------------------
 -- Properties
@@ -271,23 +279,25 @@ gs_lum img = img//
 -- | Generates an ASCII art image based off the original with 10 light levels.
 to_ascii :: Image -> String
 to_ascii img = let img' = gs_light img
-               in insert (width img) '\n'
-                      $ map (\(r,c) -> b_to_c $ img'!(r,c,0)) (d_indices img')
+               in insert (width img) '\n' $ reverse
+                      $ map (\(r,c) -> b_to_c $ img'!(r,c,0))
+                            ((filter (\(r,_) -> even r)) (d_indices img'))
 
 -- |Scales the ASCII picture by a factor of s.
 to_ascii_scaled :: Int -> Image -> String
 to_ascii_scaled s img = let img' = gs_light img
                             w    = width img - 1
                             h    = height img - 1
-                            vs   = [gvs img' r c s
-                                        | r <- [0,s..h - (h `rem` s) - s]
-                                   ,      c <- [0,s..w - (w `rem` s) - s]]
+                            vs   = reverse
+                                   $ [gvs img' r c s
+                                          | r <- [0,2 * s..h - (h `rem` s) - s]
+                                     ,      c <- [0,s..w - (w `rem` s) - s]]
                         in insert (w `div` s) '\n' $ map b_to_c vs
   where
       gvs img r c s =
-          let v = [fromIntegral $ img!(r',c',0) | r' <- [r..r + (s `div` 2)]
+          let v = [fromIntegral $ img!(r',c',0) | r' <- [r..r + s]
                   , c' <- [c..c + s]]
-          in (sum v :: Int) `div` (s * (s `div` 2))
+          in (sum v :: Int) `div` (s^2)
 
 
 -- helper function for the ascii generation.
