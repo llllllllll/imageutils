@@ -98,6 +98,11 @@ pop_art = do
     writeImage "../img/pop_art.jpg" ((img <//> Red ^++^ img <//> Green) >++>
                                      (img <//> Blue ^++^ gs_lum img))
 
+test_ascii = do
+    ilInit
+    img <- readImage "../img/duck.jpg"
+    appendFile "../test.txt" $ to_ascii_scaled 10 img
+
 -- -----------------------------------------------------------------------------
 -- Properties
 
@@ -263,7 +268,47 @@ gs_lum img = img//
                     , let cs = map fromIntegral
                                [img!(r,c,0),img!(r,c,1),img!(r,c,2)]]
 
+-- | Generates an ASCII art image based off the original with 10 light levels.
+to_ascii :: Image -> String
+to_ascii img = let img' = gs_light img
+               in insert (width img) '\n'
+                      $ map (\(r,c) -> b_to_c $ img'!(r,c,0)) (d_indices img')
 
+-- |Scales the ASCII picture by a factor of s.
+to_ascii_scaled :: Int -> Image -> String
+to_ascii_scaled s img = let img' = gs_light img
+                            w    = width img - 1
+                            h    = height img - 1
+                            vs   = [gvs img' r c s
+                                        | r <- [0,s..h - (h `rem` s) - s]
+                                   ,      c <- [0,s..w - (w `rem` s) - s]]
+                        in insert (w `div` s) '\n' $ map b_to_c vs
+  where
+      gvs img r c s =
+          let v = [fromIntegral $ img!(r',c',0) | r' <- [r..r + (s `div` 2)]
+                  , c' <- [c..c + s]]
+          in (sum v :: Int) `div` (s * (s `div` 2))
+
+
+-- helper function for the ascii generation.
+b_to_c :: Integral a => a -> Char
+b_to_c n
+    | n > 229 = '@'
+    | n > 204 = '%'
+    | n > 178 = '#'
+    | n > 153 = '*'
+    | n > 127 = '+'
+    | n > 102 = '='
+    | n > 76  = '-'
+    | n > 51  = ':'
+    | n > 25  = '.'
+    | n >= 0  = ' '
+
+-- helper function that inserts y into ns every w elements.
+insert :: Int -> a -> [a] -> [a]
+insert w y ns = zip ns (cycle [1..w]) >>= (\(m,k) -> if k == w
+                                                       then [m,y]
+                                                       else [m])
 -- -----------------------------------------------------------------------------
 -- Orientation
 
